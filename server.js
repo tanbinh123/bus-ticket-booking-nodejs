@@ -7,7 +7,7 @@ const ticketroute=require('./routes/ticket-booking');
 app.use(bodyparser.json())
 app.use(ticketroute)
 
-mongoose.connect('mongodb://127.0.0.1:27017/ramanabooking',{
+mongoose.connect('mongodb://127.0.0.1:27017/ticketManagement',{
     useUnifiedTopology:true,
     useFindAndModify:false,
     useNewUrlParser:true,
