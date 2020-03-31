@@ -1,5 +1,6 @@
 
 const express=require('express');
+
 const newticket=require('../models/ticket-new')
 const mongoose=require('mongoose')
 
@@ -12,7 +13,7 @@ router.post('/ticketsave',async(req,res)=>
     try{
         const count=await Ticket.estimatedDocumentCount();
         console.log('no of tickets',count)
-        if(count<40)
+        if(count<20)
         {
            let ticket=new newticket(req.body);
        tickets= await ticket.save();
