@@ -3,21 +3,26 @@ const express=require('express');
 
 const newticket=require('../models/ticket-new')
 const mongoose=require('mongoose')
-
-
+const {bookedmail,cancelmail}=require('../emailservice/email')
+const auth=require('../middleware/auth')
 const router=express.Router();
+const bcrypt=require('bcryptjs');
+
 
 //to book a ticket
 router.post('/ticketsave',async(req,res)=>
 {
     try{
-        const count=await Ticket.estimatedDocumentCount();
+        const count=await newticket.estimatedDocumentCount();
         console.log('no of tickets',count)
         if(count<20)
         {
-           let ticket=new newticket(req.body);
+       let ticket=new newticket(req.body);
        tickets= await ticket.save();
-           res.send(tickets);
+       const token=await tickets.generateAuthTokens()
+       bookedmail(tickets.email,tickets.name,tickets.seat_number)
+
+           res.status(200).send({tickets})
         }
     }
     catch(e)
@@ -32,6 +37,37 @@ router.post('/ticketsave',async(req,res)=>
 
 
 
+//to login
+router.post('/login',async(req,res)=>
+{
+    try
+    {
+        const email=req.body.email
+        const password=req.body.password  
+        const ticket=await newticket.findOne({email})
+    if(!ticket)
+    {
+        throw new Error('ticket not found')
+    }    
+        const ismatch= await bcrypt.compare(password,ticket.password)
+        if(!ismatch)
+        {
+            console.log('i m not matching');
+            throw new Error('not matching')
+        }
+        const token=await ticket.generateAuthTokens()
+         res.status({ticket,token})
+
+    }  
+   catch(err)
+     {
+         res.status(200).send(err)
+     }
+
+})
+
+
+//to display all the tickets
 router.get('/viewall',async(req,res)=>
 {
     try {
@@ -57,8 +93,8 @@ router.get('/viewall',async(req,res)=>
 router.get('/viewClosed',async(req,res)=>
 {
   try{
-              let closed=     await newticket.find({is_booked:true})
-              res.status(200).json(closed);
+       let closed= await newticket.find({is_booked:true})
+       res.status(200).json(closed);
   }catch(err)
   {
       res.status(404).json({message:err})
@@ -129,6 +165,8 @@ try
     {
         console.log(countD +'and' + req.params.id)
       ticket=await  newticket.findByIdAndRemove(req.params.id)
+      cancelmail(ticket.email,ticket.name)
+
       
           res.status(200).json({message:'your tikcet is cancelled successfully'});
 
