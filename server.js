@@ -8,7 +8,7 @@ app.use(bodyparser.json())
 app.use(ticketroute)
 
 mongoose.connect('mongodb://127.0.0.1:27017/ticketManagement',{
-    useUnifiedTopology:true,
+    //useUnifiedTopology:true,
     useFindAndModify:false,
     useNewUrlParser:true,
     useCreateIndex:true,

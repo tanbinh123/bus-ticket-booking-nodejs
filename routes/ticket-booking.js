@@ -32,43 +32,41 @@ router.post('/ticketsave',async(req,res)=>
         return;
     }
 
-    
+     
 })
 
-
-
-//to login
 router.post('/login',async(req,res)=>
 {
-    try
-    {
-        const email=req.body.email
-        const password=req.body.password  
-        const ticket=await newticket.findOne({email})
-    if(!ticket)
-    {
-        throw new Error('ticket not found')
-    }    
-        const ismatch= await bcrypt.compare(password,ticket.password)
+    try {
+        console.log('im in try block')
+        const e1=req.body.email
+        const p1=req.body.password
+        const ticket= await newticket.findOne({email:e1})
+        console.log('im after try finding ticket')
+        if(!ticket)
+        {
+            throw new Error('your ticket is not found with the credentials your provided')
+        }
+        const ismatch=await bcrypt.compare(p1,ticket.password)
         if(!ismatch)
         {
-            console.log('i m not matching');
-            throw new Error('not matching')
+            throw new Error('your password is not matching')
         }
-        const token=await ticket.generateAuthTokens()
-         res.status({ticket,token})
-
-    }  
-   catch(err)
-     {
-         res.status(200).send(err)
-     }
-
+        const token=await newticket.generateAuthTokens()
+        res.status(200).send({ticket,token})
+    }
+    catch(err)
+    {
+        res.status(404).send(err)
+    } 
 })
+
+
+
 
 
 //to display all the tickets
-router.get('/viewall',async(req,res)=>
+router.get('/viewall',auth,async(req,res)=>
 {
     try {
       await  newticket.find({}).sort({name:-1,is_booked:-1}).exec((err,response)=>
@@ -89,8 +87,10 @@ router.get('/viewall',async(req,res)=>
 })
 
 
+
+
 // to display all the boooked tickets
-router.get('/viewClosed',async(req,res)=>
+router.get('/viewClosed',auth,async(req,res)=>
 {
   try{
        let closed= await newticket.find({is_booked:true})
@@ -109,7 +109,7 @@ router.get('/viewOpen',async(req,res)=>
         ticket=await newticket.find({is_booked:{ $ne:true}})
         if(ticket.length<1)
         return res.status(404).json({message:'no ticket found'});
-        res.send(200).json(ticket)
+        res.sendStatus(200).json(ticket)
     }
     catch(e)
     {
@@ -134,9 +134,7 @@ router.get('/ticket/:ticket_id', (req, res) => {
 
 module.exports=router
 
-
 //to view a single ticket details
-
 
 router.get('/:t_id',async(req,res)=>
 {  
@@ -150,7 +148,6 @@ router.get('/:t_id',async(req,res)=>
         res.send(error);   
     }    
 })
-
 
 //to cancel a ticket, with the help of id
 router.delete('/cancel/:id',async(req,res)=>
@@ -181,7 +178,6 @@ try
     }
 )
 
-
 // to update the details of a ticket
 router.patch('/update/:t_id',async(req,res)=>
 {   
@@ -208,7 +204,6 @@ router.patch('/update/:t_id',async(req,res)=>
         res.status(400).send('invalid')
     }
 })
-
 
 
 // to reset the details of the ticket
@@ -246,3 +241,38 @@ router.put('/admin/reset',async(req,res)=>
    console.log(err)
     }
 })
+
+
+router.get('/mybus/viewfromdetails',async(req,res)=>
+{
+
+    const from=req.body.from
+    const to=req.body.to
+    //const date=req.body.startdate
+   try
+   {
+ const fromtickets=  await newticket.find({from:from,to:to})
+     res.status(200).json({message:fromtickets.name})
+   }
+   catch(err)
+   {
+         console.log(err)
+         res.status(404).json({message:err})
+   } 
+})
+
+
+
+router.get('/tickets/check',async(req,res)=>
+{
+    try
+    {
+        let ticket=await newticket.find({name:'nagamani'})
+        res.sendStatus(200).send(ticket)
+    }
+    catch(err)
+    {
+       res.sendStatus(404).send(err)
+    }
+})
+

@@ -62,6 +62,23 @@ const ticketSchema=new Schema(
            type:Date,
            default:Date.now()
         },
+
+        startdate:
+        {
+           type:Date,
+           required:true
+        },
+        from:
+        {
+         type:String,
+         required:true
+        },
+        to:
+        {
+            type:String,
+            required:true
+        }
+,
         tokens: [{
             token: {
                 type: String,
@@ -72,6 +89,22 @@ const ticketSchema=new Schema(
     }
 )
 
+ticketSchema.statics.findByCredentials = async (email, password) => {
+    const ticket = await newticket.findOne({ email })
+
+    if (!user) {
+        throw new Error('Unable to login')
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password)
+
+    if (!isMatch) {
+        throw new Error('Unable to login')
+    }
+
+    return ticket
+}
+
 
  ticketSchema.methods.generateAuthTokens=async function()
  {
@@ -80,32 +113,6 @@ const ticketSchema=new Schema(
      ticket.tokens=ticket.tokens.concat({token})
      await ticket.save()
      return token
- }
-
-
-
-
- ticketSchema.statics.findByCredentials=async (email,password)=>
- {
-
-    console.log('im in credentials')
-     const ticket=await newticket.findone({email})
-     if(!ticket)
-     {
-        console.log('im in error section')
-         throw new Error('unable to login')
-
-     }
-     const ismatch= await bcrypt.compare(password,user.password)
-     if(!ismatch)
-     {
-        console.log('im in ismatcht sec')
-         throw new Error('unable to login');
-     }
-   console.log('im trying to return a ticket')
-    return ticket
-    
-
  }
 
 

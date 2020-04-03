@@ -8,12 +8,10 @@ const auth = async (req, res, next) => {
     try {
         const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, 'mytickettoken')
-     //   const user = await ti.findOne({ _id: decoded._id, 'tokens.token': token })
         const ticket=await Ticket.findOne({_id:decoded._id,'tokens.token':token})
         if (!ticket) {
-            throw new Error()
+            throw new Error("ticket is not found")
         }
-
         req.token = token
         req.ticket = ticket
         next()
